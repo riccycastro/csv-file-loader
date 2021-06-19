@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Service;
+
+use Exception;
+use Iterator;
+
+interface FileLoaderInterface
+{
+    public const MIME_TYPE_CSV = 'text/csv';
+
+    public const MIME_TYPE_SUPPORTED = [
+        self::MIME_TYPE_CSV,
+    ];
+
+    public const FILE_EXTENSION_CSV = 'csv';
+
+    public const FILE_EXTENSION_SUPPORTED = [
+        self::FILE_EXTENSION_CSV,
+    ];
+
+    /**
+     * @param string $fileName without extension
+     * @throws Exception
+     */
+    public function loadFile(string $fileName): int;
+
+    /**
+     * @return int|null
+     */
+    public function count(): ?int;
+
+    /**
+     * @return Iterator
+     */
+    public function read(): Iterator;
+
+    /**
+     * @param array $headers
+     */
+    public function setHeaders(array $headers): void;
+}
