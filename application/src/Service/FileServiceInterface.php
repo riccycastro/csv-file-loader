@@ -21,11 +21,11 @@ interface FileServiceInterface
     public function getUploadedFileExtension(UploadedFile $uploadedFile): ?string;
 
     /**
-     * @param int $fileSize
+     * @param UploadedFile $file
      * @return void
      * @throws PayloadTooLargeException
      */
-    public function validateMaxSize(int $fileSize): void;
+    public function validateMaxSize(UploadedFile $file): void;
 
     /**
      * @param UploadedFile $file

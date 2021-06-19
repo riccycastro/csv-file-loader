@@ -4,13 +4,15 @@ namespace App\Exception;
 
 use App\Service\FileLoaderInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\HttpException;
+use Throwable;
 
-class UnsupportedMediaTypeException extends HttpException
+class UnsupportedMediaTypeException extends ErrorResponseException
 {
-    public function __construct(string $uploadedFileMimeType, \Throwable $previous = null, array $headers = [], ?int $code = 0)
+    public function __construct(string $uploadedFileName, string $uploadedFileMimeType, Throwable $previous = null)
     {
-        $message = "Supported mimetypes are [" . implode(', ', FileLoaderInterface::MIME_TYPE_ACCEPT) . "], provided mime type is $uploadedFileMimeType";
-        parent::__construct(Response::HTTP_UNSUPPORTED_MEDIA_TYPE, $message, $previous, $headers, $code);
+        $message = 'Unsupported Media Type';
+        parent::__construct(Response::HTTP_UNSUPPORTED_MEDIA_TYPE, $message, $previous);
+
+        $this->errors[$uploadedFileName] = "Supported mimetypes are [" . implode(', ', FileLoaderInterface::MIME_TYPE_SUPPORTED) . "], provided mime type is $uploadedFileMimeType";
     }
 }

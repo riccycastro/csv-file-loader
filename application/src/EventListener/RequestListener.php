@@ -42,7 +42,7 @@ class RequestListener
 
         /** @var UploadedFile $file */
         foreach ($request->files->all() as $file) {
-            $this->fileService->validateMaxSize($file->getSize());
+            $this->fileService->validateMaxSize($file);
             $this->fileService->validateType($file);
         }
     }

@@ -53,10 +53,10 @@ class FileService implements FileServiceInterface
     /**
      * @inheritDoc
      */
-    public function validateMaxSize(int $fileSize): void
+    public function validateMaxSize(UploadedFile $file): void
     {
-        if (($fileSize = $this->bytesToMegaBytes($fileSize)) > $this->fileUploadedMaxSize) {
-            throw new PayloadTooLargeException($fileSize, $this->fileUploadedMaxSize);
+        if (($fileSize = $this->bytesToMegaBytes($file->getSize())) > $this->fileUploadedMaxSize) {
+            throw new PayloadTooLargeException($file->getClientOriginalName(), $fileSize, $this->fileUploadedMaxSize);
         }
     }
 
@@ -69,7 +69,7 @@ class FileService implements FileServiceInterface
         // else we validate the client data by validating the client mimeType and
         // the file extension
         if (!($this->isValidMimeType($file->getMimeType()) || $this->isValidExtension($file))) {
-            throw new UnsupportedMediaTypeException($file->getMimeType());
+            throw new UnsupportedMediaTypeException($file->getClientOriginalName(), $file->getMimeType());
         }
     }
 

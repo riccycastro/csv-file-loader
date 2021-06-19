@@ -31,8 +31,13 @@ services:
 
     # Interfaces mapping
     App\Service\FileLoaderInterface: '@App\Service\CsvFileLoader'
+    App\Service\FileServiceInterface: '@App\Service\FileService'
 
     # Event Listeners
     App\EventListener\RequestListener:
         tags:
             - { name: kernel.event_listener, event: kernel.request }
+
+    App\EventListener\ExceptionListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }
