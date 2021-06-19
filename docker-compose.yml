@@ -1,0 +1,96 @@
+version: '3.0'
+
+volumes:
+  mysql-data:
+
+services:
+  csv-file-loader-app:
+    container_name: csv-file-loader-app
+    build: .
+    environment:
+      XDEBUG_CONFIG: remote_host=172.45.0.1
+      APP_ENV: dev
+      APP_SECRET: 3e6ba1e70c28fcf9a5dbbd7fac205a5b
+      FILE_LOAD_CHUNK_SIZE: 500 # lines of file read per cycle
+      UPLOADED_FILE_PATH: users-csv/ # lines of file read per cycle
+    volumes:
+      - ./application:/var/www/html/csv-file-loader-app
+      - ~/.bashrc:/home/appuser/.bashrc
+      - ~/.bash_history:/home/appuser/.bash_history
+    networks:
+      localnet:
+        ipv4_address: 172.45.0.4
+
+  csv-file-loader-webserver:
+    container_name: csv-file-loader-webserver
+    build: ./webserver
+    networks:
+      localnet:
+        ipv4_address: 172.45.0.5
+    volumes:
+      - ./application:/var/www/html/csv-file-loader-app
+      - ./webserver/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./webserver/nginx/sites/:/etc/nginx/sites-available
+      - ./webserver/nginx/conf.d/:/etc/nginx/conf.d
+    ports:
+      - 80:80
+    depends_on:
+      - csv-file-loader-app
+
+  csv-file-loader-mysql:
+    image: mysql:8.0.25
+    container_name: csv-file-loader-mysql
+    ports:
+      - 3306:3306
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1admin!
+    volumes:
+      - "mysql-data:/var/lib/mysql"
+    networks:
+      localnet:
+        ipv4_address: 172.45.0.7
+
+  csv-file-loader-phpmyadmin:
+    image: phpmyadmin/phpmyadmin:4.8
+    container_name: csv-file-loader-phpmyadmin
+    labels:
+      com.csv-file-loader.maintainer: "Ricardo Castro"
+      com.csv-file-loader.description: "CSV file loader phpMyAdmin"
+      com.csv-file-loader.service: "PhpMyAdmin"
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOST: "csv-file-loader-mysql"
+      PMA_USER: "root"
+      PMA_PASSWORD: "1admin!"
+      PMA_PORT: 3306
+    restart: always
+    networks:
+      localnet:
+        ipv4_address: 172.45.0.8
+    depends_on:
+      - csv-file-loader-mysql
+    ports:
+      - 8080:80
+
+  csv-file-loader-rabbitmq:
+    container_name: csv-file-loader-rabbitmq
+    build: ./rabbitmq
+    volumes:
+      - ./storage/queue:/var/lib/rabbitmq:rw
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    ports:
+      - 5672:5672
+      - 15672:15672
+    networks:
+      localnet:
+        ipv4_address: 172.45.0.6
+
+networks:
+  localnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.45.0.0/16
