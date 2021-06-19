@@ -2,8 +2,11 @@
 
 namespace App\Service;
 
+use App\Dto\UploadFileDto;
 use App\Exception\PayloadTooLargeException;
 use App\Exception\UnsupportedMediaTypeException;
+use Exception;
+use Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class FileService implements FileServiceInterface
@@ -14,14 +17,22 @@ class FileService implements FileServiceInterface
     private int $fileUploadedMaxSize;
 
     /**
+     * @var FileStorageInterface
+     */
+    private FileStorageInterface $fileStorage;
+
+    /**
      * RequestListener constructor.
      * @param int $fileUploadedMaxSize
+     * @param FileStorageInterface $fileStorage
      */
     public function __construct(
-        int $fileUploadedMaxSize
+        int $fileUploadedMaxSize,
+        FileStorageInterface $fileStorage
     )
     {
         $this->fileUploadedMaxSize = $fileUploadedMaxSize;
+        $this->fileStorage = $fileStorage;
     }
 
     /**
@@ -65,12 +76,22 @@ class FileService implements FileServiceInterface
      */
     public function validateType(UploadedFile $file): void
     {
-        // if the server calculated mimeType is valid we accept it as true
+        // if the server calculate mimeType is valid we accept it as true
         // else we validate the client data by validating the client mimeType and
         // the file extension
         if (!($this->isValidMimeType($file->getMimeType()) || $this->isValidExtension($file))) {
             throw new UnsupportedMediaTypeException($file->getClientOriginalName(), $file->getMimeType());
         }
+    }
+
+    /**
+     * @param UploadFileDto $uploadFileDto
+     * @throws ParameterNotFoundException
+     * @throws Exception
+     */
+    public function saveFile(UploadFileDto $uploadFileDto)
+    {
+        $this->fileStorage->persist($uploadFileDto->file, $uploadFileDto->extension);
     }
 
     /**

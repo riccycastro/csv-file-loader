@@ -12,7 +12,6 @@ services:
       APP_ENV: dev
       APP_SECRET: 3e6ba1e70c28fcf9a5dbbd7fac205a5b
       FILE_LOAD_CHUNK_SIZE: 500 # lines of file read per cycle
-      UPLOADED_FILE_PATH: users-csv/ # lines of file read per cycle
     volumes:
       - ./application:/var/www/html/csv-file-loader-app
       - ~/.bashrc:/home/appuser/.bashrc

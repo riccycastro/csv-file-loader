@@ -14,5 +14,23 @@ class UploadFileDto
      * )
      * @var UploadedFile|null
      */
-    public ?UploadedFile $file = null;
+    public ?UploadedFile $file;
+
+    /**
+     * @Assert\NotBlank
+     * @var string|null
+     */
+    public ?string $extension;
+
+    /**
+     * @Assert\NotBlank
+     * @var string|null
+     */
+    public ?string $originalName;
+
+    /**
+     * @Assert\NotBlank
+     * @var string|null
+     */
+    public ?string $name;
 }
