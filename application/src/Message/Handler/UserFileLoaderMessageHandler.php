@@ -9,7 +9,10 @@ use App\Service\FileLoaderInterface;
 use Doctrine\DBAL\Driver\Exception as DbalDriverException;
 use Doctrine\DBAL\Exception as DbalException;
 use Exception;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
+use Symfony\Component\Validator\ConstraintViolation;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UserFileLoaderMessageHandler implements MessageHandlerInterface
@@ -39,20 +42,28 @@ class UserFileLoaderMessageHandler implements MessageHandlerInterface
     private ValidatorInterface $validator;
 
     /**
+     * @var LoggerInterface
+     */
+    private LoggerInterface $logger;
+
+    /**
      * FileLoaderMessageHandler constructor.
      * @param FileLoaderInterface $fileLoader
      * @param UserRepository $userRepository
      * @param ValidatorInterface $validator
+     * @param LoggerInterface $logger
      */
     public function __construct(
         FileLoaderInterface $fileLoader,
         UserRepository $userRepository,
-        ValidatorInterface $validator
+        ValidatorInterface $validator,
+        LoggerInterface $logger
     )
     {
         $this->fileLoader = $fileLoader;
         $this->userRepository = $userRepository;
         $this->validator = $validator;
+        $this->logger = $logger;
     }
 
     /**
@@ -72,7 +83,7 @@ class UserFileLoaderMessageHandler implements MessageHandlerInterface
 
         $userFileLoadedDtoList = [];
         while ($records = $this->fileLoader->read()) {
-            foreach ($records as $record) {
+            foreach ($records as $offset => $record) {
                 $userFileLoadedDto = new UserFileLoadedDto();
 
                 $userFileLoadedDto->email = !empty($record['email']) ? $record['email'] : null;
@@ -82,9 +93,13 @@ class UserFileLoaderMessageHandler implements MessageHandlerInterface
                 $userFileLoadedDto->description = !empty($record['description']) ? $record['description'] : null;
                 $userFileLoadedDto->lastAccessDate = !empty($record['last_access_date']) ? $record['last_access_date'] : null;
 
-                if ($this->isValidDto($userFileLoadedDto)) {
-                    $userFileLoadedDtoList[] = $userFileLoadedDto;
+                $violations = $this->validateDto($userFileLoadedDto);
+                if ($violations->count()) {
+                    $this->logViolations($violations, $offset, $message->getFileName());
+                    continue;
                 }
+
+                $userFileLoadedDtoList[] = $userFileLoadedDto;
             }
         }
 
@@ -93,11 +108,27 @@ class UserFileLoaderMessageHandler implements MessageHandlerInterface
 
     /**
      * @param UserFileLoadedDto $userFileLoadedDto
-     * @return bool
+     * @return ConstraintViolationListInterface
      */
-    private function isValidDto(UserFileLoadedDto $userFileLoadedDto): bool
+    private function validateDto(UserFileLoadedDto $userFileLoadedDto): ConstraintViolationListInterface
     {
-        $violations = $this->validator->validate($userFileLoadedDto);
-        return count($violations) === 0;
+        return $this->validator->validate($userFileLoadedDto);
+    }
+
+    /**
+     * @param ConstraintViolationListInterface $violations
+     * @param int $offset
+     * @param string $fileName
+     */
+    private function logViolations(ConstraintViolationListInterface $violations, int $offset, string $fileName)
+    {
+        $errors = [];
+
+        /** @var ConstraintViolation $violation */
+        foreach ($violations as $violation) {
+            $errors[$violation->getPropertyPath()] = $violation->getMessage();
+        }
+
+        $this->logger->alert(self::class . " :: $fileName (line $offset)", $errors);
     }
 }

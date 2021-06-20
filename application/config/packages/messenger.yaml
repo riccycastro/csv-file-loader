@@ -15,6 +15,11 @@ framework:
                     delay: 10000 # 10 seconds
                     multiplier: 6
 
+        buses:
+            messenger.bus.default:
+                middleware:
+                    - 'App\Message\Middleware\MessengerBusMiddleware'
+
         routing:
             # Route your messages to the transports
             'App\Message\MessageInterface': async
