@@ -1,4 +1,5 @@
 # csv-file-loader
+https://github.com/riccycastro/csv-file-loader
 
 ### Requirements
 The file can contain an arbitrary number of rows.
@@ -35,12 +36,11 @@ Since this is for test purpose I'm going to type the correct configs here to hel
 
 ``` dotenv
     DATABASE_URL=mysql://root:1admin!@csv-file-loader-mysql/loader-database
-    MESSENGER_TRANSPORT_DSN=amqp://guest:guest@localhost:5672
+    MESSENGER_TRANSPORT_DSN=amqp://guest:guest@csv-file-loader-rabbitmq:5672
 ```
 
-Copy the content from webserver/hosts and paste it in you local hosts file. 
+Copy the content from webserver/hosts and paste it in you local hosts file.
 
-Open your browser and go to http://localhost:8080, you should see PHPMyAdmin page. Create a new data base: '__loader-database__'
 ___
 
 Now you can start your server
@@ -58,6 +58,8 @@ dependencies. It takes some seconds to complete. Run the bellow command if you w
     docker logs -f --tail 100 csv-file-loader-app
 ```
 
+Open your browser and go to http://localhost:8080, you should see PHPMyAdmin page. Create a new data base: '__loader-database__'
+
 ### Execution
 Using Insomnia.rest(is an httpClient) import the _Insomnia_ file.
 
@@ -69,7 +71,7 @@ Using Insomnia.rest(is an httpClient) import the _Insomnia_ file.
 
         with a multipart body {file: your_file}
 
-Enter the php container 
+Enter the php container
 
 ``` bash
     docker exec -it csv-file-loader-app bash
@@ -83,7 +85,6 @@ Run migrations
 And start the consumer
 
 ``` bash
-    docker exec -it csv-file-loader-app bash
     bin/console messenger:consume
 ```
 
@@ -92,7 +93,7 @@ Execute the http-request. In the consumer cmd you should see something similar t
     ## 2021-06-20 18:07:27: Message "App\Message\UserFileLoaderMessage" consumed successfully
 ```
 
-Open your browser and go to http://localhost:8080, and open the user table where you should find the imported users  
+Open your browser and go to http://localhost:8080, and open the user table where you should find the imported users
 
 ### Tests
 To run tests enter the application container
