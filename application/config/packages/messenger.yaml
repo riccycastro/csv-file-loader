@@ -8,7 +8,7 @@ framework:
             # async: '%env(MESSENGER_TRANSPORT_DSN)%'
             # failed: 'doctrine://default?queue_name=failed'
             # sync: 'sync://'
-            amqp:
+            async:
                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
                 retry_strategy:
                     max_retries: 3
@@ -17,4 +17,4 @@ framework:
 
         routing:
             # Route your messages to the transports
-            'App\Message\MessageInterface': amqp
+            'App\Message\MessageInterface': async

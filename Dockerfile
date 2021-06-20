@@ -12,7 +12,8 @@ RUN docker-php-ext-install pdo pdo_mysql
 RUN apk add rabbitmq-c-dev
 
 RUN pecl install amqp; \
-    docker-php-ext-enable amqp;
+    docker-php-ext-enable amqp; \
+    docker-php-ext-install bcmath sockets
 
 RUN echo "xdebug.remote_enable=on" >> /usr/local/etc/php/conf.d/xdebug.ini \
     && echo "xdebug.remote_autostart=off" >> /usr/local/etc/php/conf.d/xdebug.ini \

@@ -31,9 +31,9 @@ interface FileLoaderInterface
     public function count(): ?int;
 
     /**
-     * @return Iterator
+     * @return Iterator|array
      */
-    public function read(): Iterator;
+    public function read();
 
     /**
      * @param array $headers
