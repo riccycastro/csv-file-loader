@@ -30,6 +30,10 @@ class UserRepository extends ServiceEntityRepository
      */
     public function insertBulk(array $userFileLoadedDtoList): int
     {
+        if (!$userFileLoadedDtoList) {
+            return 0;
+        }
+
         $values = [];
         $data = [];
 

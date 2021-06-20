@@ -40,12 +40,15 @@ class UploadFileParamConverter extends AbstractParamConverter
 
         /** @var UploadedFile $file */
         $file = $request->files->get('file');
+
         $uploadFileDto->file = $file;
+        $this->validate($uploadFileDto, 'file');
+
         $uploadFileDto->extension = $this->fileService->getUploadedFileExtension($file);
         $uploadFileDto->originalName = $file->getClientOriginalName();
         $uploadFileDto->name = $file->getFilename();
 
-        $this->validate($uploadFileDto);
+        $this->validate($uploadFileDto, 'all');
 
         $request->attributes->set($configuration->getName(), $uploadFileDto);
 

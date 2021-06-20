@@ -7,6 +7,7 @@ use App\Response\JsonResponse;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class ExceptionListener
 {
@@ -33,7 +34,6 @@ class ExceptionListener
         $exception = $event->getThrowable();
 
         if ($exception instanceof ErrorResponseException) {
-
             $this->logger->notice(self::class, [
                 'message' => $exception->getMessage(),
                 'code' => $exception->getCode(),
@@ -52,8 +52,10 @@ class ExceptionListener
                 'trace' => $exception->getTraceAsString(),
             ]);
 
-            $event->setResponse((new JsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR))
-                ->setMessage('An unexpected error occurred, please try again.')
+            $statusCode = $exception instanceof HttpException ? $exception->getStatusCode() : Response::HTTP_INTERNAL_SERVER_ERROR;
+
+            $event->setResponse((new JsonResponse($statusCode))
+                ->setMessage(Response::$statusTexts[$statusCode])
                 ->setResult(JsonResponse::RESULT_ERROR)
             );
         }

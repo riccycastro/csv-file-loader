@@ -4,11 +4,11 @@ namespace App\Service;
 
 use Exception;
 use Iterator;
+use League\Csv\AbstractCsv;
 use League\Csv\Exception as LeagueCsvException;
 use League\Csv\Reader;
 use League\Csv\Statement;
 use League\Csv\UnavailableStream;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Exception\FileNotFoundException;
 
 class CsvFileLoader implements FileLoaderInterface
@@ -16,7 +16,7 @@ class CsvFileLoader implements FileLoaderInterface
     /**
      * @var int
      */
-    private int $fileLoadChunkSize;
+    private int $fileLoadChunkSize = self::DEFAULT_FILE_CHUNK_SIZE;
 
     /**
      * @var int
@@ -41,17 +41,21 @@ class CsvFileLoader implements FileLoaderInterface
     /**
      * CsvFileLoader constructor.
      * @param int $fileLoadChunkSize
-     * @param ParameterBagInterface $params
+     * @param string $fileName
+     * @param string $uploadedFilePath
+     * @throws Exception
      */
     public function __construct(
+        string $fileName,
         int $fileLoadChunkSize,
-        ParameterBagInterface $params
+        string $uploadedFilePath
     )
     {
         $this->fileLoadChunkSize = $fileLoadChunkSize;
-        $this->uploadedFilePath = $params->get('local_storage_csv_path');
-        $this->reader = null;
+        $this->uploadedFilePath = $uploadedFilePath;
         $this->headers = [];
+        $this->offset = 0;
+        $this->loadFile($fileName);
     }
 
     /**
@@ -61,7 +65,7 @@ class CsvFileLoader implements FileLoaderInterface
     public function loadFile(string $fileName): int
     {
         try {
-            $this->reader = Reader::createFromPath($this->uploadedFilePath . $fileName);
+            $this->reader = $this->createReader($fileName);
             $this->reader->setHeaderOffset(0);
         } catch (UnavailableStream $exception) {
             throw new FileNotFoundException("File $fileName could not be found.");
@@ -75,6 +79,7 @@ class CsvFileLoader implements FileLoaderInterface
 
         $this->reader->skipEmptyRecords();
         $this->offset = 0;
+        $this->headers = [];
         return $this->count();
     }
 
@@ -83,7 +88,7 @@ class CsvFileLoader implements FileLoaderInterface
      */
     public function count(): ?int
     {
-        if (!$this->reader) {
+        if (!isset($this->reader)) {
             return null;
         }
 
@@ -105,7 +110,7 @@ class CsvFileLoader implements FileLoaderInterface
             ->limit($this->fileLoadChunkSize);
 
         $this->offset += $this->fileLoadChunkSize;
-        return $stmt->process($this->reader)->getRecords($this->headers);
+        return $this->processStatement($stmt);
     }
 
     /**
@@ -114,5 +119,22 @@ class CsvFileLoader implements FileLoaderInterface
     public function setHeaders(array $headers): void
     {
         $this->headers = $headers;
+    }
+
+    /**
+     * @param string $fileName
+     * @return Reader|AbstractCsv
+     */
+    protected function createReader(string $fileName) {
+        return Reader::createFromPath($this->uploadedFilePath . $fileName);
+    }
+
+    /**
+     * @param Statement $statement
+     * @return Iterator
+     */
+    protected function processStatement(Statement $statement): Iterator
+    {
+        return $statement->process($this->reader)->getRecords($this->headers);
     }
 }

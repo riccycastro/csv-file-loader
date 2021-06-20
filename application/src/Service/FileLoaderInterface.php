@@ -19,6 +19,8 @@ interface FileLoaderInterface
         self::FILE_EXTENSION_CSV,
     ];
 
+    public const DEFAULT_FILE_CHUNK_SIZE = 500;
+
     /**
      * @param string $fileName without extension
      * @throws Exception

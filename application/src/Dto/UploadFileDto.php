@@ -8,28 +8,37 @@ use Symfony\Component\Validator\Constraints as Assert;
 class UploadFileDto
 {
     /**
-     * @Assert\NotNull
+     * @Assert\NotNull(
+     *     groups={"file", "all"}
+     * )
      * @Assert\File(
-     *     mimeTypes={"text/csv", "text/plain"}
+     *     mimeTypes={"text/csv", "text/plain"},
+     *     groups={"file", "all"}
      * )
      * @var UploadedFile|null
      */
     public ?UploadedFile $file;
 
     /**
-     * @Assert\NotBlank
+     * @Assert\NotBlank(
+     *     groups={"all"}
+     * )
      * @var string|null
      */
     public ?string $extension;
 
     /**
-     * @Assert\NotBlank
+     * @Assert\NotBlank(
+     *     groups={"all"}
+     * )
      * @var string|null
      */
     public ?string $originalName;
 
     /**
-     * @Assert\NotBlank
+     * @Assert\NotBlank(
+     *     groups={"all"}
+     * )
      * @var string|null
      */
     public ?string $name;

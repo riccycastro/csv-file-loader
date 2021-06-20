@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Dto\UploadFileDto;
+use App\Response\JsonResponse;
 use App\Service\FileServiceInterface;
 use Exception;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -33,13 +34,11 @@ class FileController extends AbstractController
      * @Route("/files", name="file", methods={"POST"})
      * @throws Exception
      */
-    public function index(UploadFileDto $uploadFileDto): Response
+    public function indexAction(UploadFileDto $uploadFileDto): Response
     {
         $this->fileService->saveFile($uploadFileDto);
 
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/FileController.php',
-        ]);
+        return (new JsonResponse())
+            ->setMessage('File received');
     }
 }
