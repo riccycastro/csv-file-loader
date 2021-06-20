@@ -5,7 +5,7 @@ namespace App\Message\Handler;
 use App\Dto\UserFileLoadedDto;
 use App\Message\UserFileLoaderMessage;
 use App\Repository\UserRepository;
-use App\Service\FileLoaderInterface;
+use App\Service\FileLoaderFactory;
 use Doctrine\DBAL\Driver\Exception as DbalDriverException;
 use Doctrine\DBAL\Exception as DbalException;
 use Exception;
@@ -27,9 +27,9 @@ class UserFileLoaderMessageHandler implements MessageHandlerInterface
     ];
 
     /**
-     * @var FileLoaderInterface
+     * @var FileLoaderFactory
      */
-    private FileLoaderInterface $fileLoader;
+    private FileLoaderFactory $fileLoaderFactory;
 
     /**
      * @var UserRepository
@@ -48,19 +48,19 @@ class UserFileLoaderMessageHandler implements MessageHandlerInterface
 
     /**
      * FileLoaderMessageHandler constructor.
-     * @param FileLoaderInterface $fileLoader
+     * @param FileLoaderFactory $fileLoaderFactory
      * @param UserRepository $userRepository
      * @param ValidatorInterface $validator
      * @param LoggerInterface $logger
      */
     public function __construct(
-        FileLoaderInterface $fileLoader,
+        FileLoaderFactory $fileLoaderFactory,
         UserRepository $userRepository,
         ValidatorInterface $validator,
         LoggerInterface $logger
     )
     {
-        $this->fileLoader = $fileLoader;
+        $this->fileLoaderFactory = $fileLoaderFactory;
         $this->userRepository = $userRepository;
         $this->validator = $validator;
         $this->logger = $logger;
@@ -74,15 +74,13 @@ class UserFileLoaderMessageHandler implements MessageHandlerInterface
      */
     public function __invoke(UserFileLoaderMessage $message)
     {
-        $this->fileLoader->setHeaders(self::USER_FILE_HEADER);
+        $fileLoader = $this->fileLoaderFactory->makeFileLoader($message->getFileName(), $message->getFileExtension());
 
-        if (!$this->fileLoader->loadFile($message->getFileName())) {
-            // The file has no data to read
-            return;
-        }
+        $fileLoader->setHeaders(self::USER_FILE_HEADER);
 
         $userFileLoadedDtoList = [];
-        while ($records = $this->fileLoader->read()) {
+        while ($records = $fileLoader->read()) {
+
             foreach ($records as $offset => $record) {
                 $userFileLoadedDto = new UserFileLoadedDto();
 
