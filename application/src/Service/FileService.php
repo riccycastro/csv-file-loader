@@ -5,9 +5,11 @@ namespace App\Service;
 use App\Dto\UploadFileDto;
 use App\Exception\PayloadTooLargeException;
 use App\Exception\UnsupportedMediaTypeException;
+use App\Message\UserFileLoaderMessage;
 use Exception;
 use Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 class FileService implements FileServiceInterface
 {
@@ -22,17 +24,25 @@ class FileService implements FileServiceInterface
     private FileStorageInterface $fileStorage;
 
     /**
+     * @var MessageBusInterface
+     */
+    private MessageBusInterface $messageBus;
+
+    /**
      * RequestListener constructor.
      * @param int $fileUploadedMaxSize
      * @param FileStorageInterface $fileStorage
+     * @param MessageBusInterface $messageBus
      */
     public function __construct(
         int $fileUploadedMaxSize,
-        FileStorageInterface $fileStorage
+        FileStorageInterface $fileStorage,
+        MessageBusInterface $messageBus
     )
     {
         $this->fileUploadedMaxSize = $fileUploadedMaxSize;
         $this->fileStorage = $fileStorage;
+        $this->messageBus = $messageBus;
     }
 
     /**
@@ -92,6 +102,12 @@ class FileService implements FileServiceInterface
     public function saveFile(UploadFileDto $uploadFileDto)
     {
         $this->fileStorage->persist($uploadFileDto->file, $uploadFileDto->extension);
+
+        $this->messageBus->dispatch(new UserFileLoaderMessage(
+            $uploadFileDto->name,
+            $uploadFileDto->originalName,
+            $uploadFileDto->extension
+        ));
     }
 
     /**
