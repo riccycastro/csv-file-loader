@@ -26,7 +26,7 @@ class UserRepository extends ServiceEntityRepository
      * @param UserFileLoadedDto[] $userFileLoadedDtoList
      * @return int
      * @throws DbalDriverException
-     * @throws  DbalException
+     * @throws DbalException
      */
     public function insertBulk(array $userFileLoadedDtoList): int
     {

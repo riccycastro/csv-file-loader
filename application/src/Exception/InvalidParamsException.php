@@ -5,7 +5,7 @@ namespace App\Exception;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
-class InvalidParamsException  extends ErrorResponseException
+class InvalidParamsException extends ErrorResponseException
 {
     public function __construct(array $errors, Throwable $previous = null)
     {
